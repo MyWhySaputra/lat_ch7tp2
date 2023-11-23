@@ -17,45 +17,31 @@ app.use('/', router)
 
 io.on('connection', async (socket) => {
   try {
+    const { authorization } = socket.handshake.headers
 
-    const { authorization } = socket.handshake.headers;
-    // Jika pengguna belum terautentikasi, maka tolak koneksi
     if (!authorization) {
       throw new Error('User not authenticated')
     }
 
-    // Lakukan verifikasi token untuk mendapatkan informasi pengguna
     const user = await jwt.verify(authorization, process.env.SECRET_KEY)
 
+    let roomName
+
     if (user.id) {
-
       let clientId = socket.handshake.headers['client-id']
-      let roomName = `chat-${user.id}-${clientId}`
-
-      console.log(roomName)
-
-      socket.on(roomName, (data) => {
-
-        //io.sockets.emit(roomName, data)
-        socket.broadcast.emit(roomName, data)
-      })
-      return
-    }
-
-    if (user.clientId) {
-
+      roomName = `chat-${user.id}-${clientId}`
+    } else if (user.clientId) {
       let userId = socket.handshake.headers['user-id']
-      let roomName = `chat-${userId}-${user.clientId}`
-
-      console.log(roomName)
-
-      socket.on(roomName, (data) => {
-
-        //io.sockets.emit(roomName, data)
-        socket.broadcast.emit(roomName, data)
-      })
-      return
+      roomName = `chat-${userId}-${user.clientId}`
+    } else {
+      throw new Error('Invalid user data')
     }
+
+    console.log(roomName)
+
+    socket.on(roomName, (data) => {
+      socket.broadcast.emit(roomName, data)
+    })
 
   } catch (error) {
     console.error(`Socket error: ${error.message}`)
