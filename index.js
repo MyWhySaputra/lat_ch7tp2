@@ -15,19 +15,6 @@ http.listen(3000, ()=>{
 
 app.use('/', router)
 
-// app.use('/', (req,res)=>{
-//   res.sendFile(__dirname+'/index.html')
-// })
-
-// io.on('connect', (socket)=>{
-//   console.log('user conected')
-//   // let eventRoom = `chat-${req.user.id}-${clientId}`
-//   // console.log(eventRoom)
-//   socket.on('chat',(data)=>{
-//     io.sockets.emit('chat',data)
-//   })
-// })
-
 io.on('connection', async (socket) => {
   try {
 
