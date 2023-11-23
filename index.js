@@ -42,43 +42,31 @@ io.on('connection', async (socket) => {
 
     if (user.id) {
 
-      socket.on(`chat`, (data) => {
+      let clientId = socket.handshake.headers['client-id']
+      let roomName = `chat-${user.id}-${clientId}`
 
-        const clientId = socket.handshake.headers['client-id']
+      console.log(roomName)
 
-        const roomName = `chat-${user.id}-${clientId}`
-
-        console.log(roomName)
+      socket.on(roomName, (data) => {
 
         //io.sockets.emit(roomName, data)
-
         socket.broadcast.emit(roomName, data)
-      });
-
-      socket.on('disconnect', () => {
-        console.log(`User disconnected: ${user.id}`)
-      });
+      })
       return
     }
 
     if (user.clientId) {
 
-      socket.on(`chat`, (data) => {
+      let userId = socket.handshake.headers['user-id']
+      let roomName = `chat-${userId}-${user.clientId}`
 
-        const userId = socket.handshake.headers['user-id']
+      console.log(roomName)
 
-        const roomName = `chat-${userId}-${user.clientId}`
-
-        console.log(roomName)
+      socket.on(roomName, (data) => {
 
         //io.sockets.emit(roomName, data)
-
         socket.broadcast.emit(roomName, data)
-      });
-
-      socket.on('disconnect', () => {
-        console.log(`Client disconnected: ${user.clientId}`)
-      });
+      })
       return
     }
 
