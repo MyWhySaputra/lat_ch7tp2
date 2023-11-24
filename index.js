@@ -5,6 +5,9 @@ const app = express()
 const http = require('http').Server(app)
 const io = require('socket.io')(http)
 const jwt = require('jsonwebtoken')
+const { PrismaClient } = require('@prisma/client')
+
+const prisma = new PrismaClient()
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
@@ -28,11 +31,21 @@ io.on('connection', async (socket) => {
     let roomName
 
     if (user.id) {
-      let clientId = socket.handshake.headers['client-id']
-      roomName = `chat-${user.id}-${clientId}`
+      let clientEmail = socket.handshake.headers['client-email']
+      const clientid = await prisma.user.findUnique({
+          where: {
+              email: clientEmail
+          }
+      })
+      roomName = `chat-${user.id}-${clientid.id}`
     } else if (user.clientId) {
-      let userId = socket.handshake.headers['user-id']
-      roomName = `chat-${userId}-${user.clientId}`
+      let userEmail = socket.handshake.headers['user-email']
+      const userid = await prisma.user.findUnique({
+          where: {
+              email: userEmail
+          }
+      })
+      roomName = `chat-${userid.id}-${user.clientId}`
     } else {
       throw new Error('Invalid user data')
     }
