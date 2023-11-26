@@ -38,6 +38,12 @@ io.on('connection', async (socket) => {
           }
       })
       roomName = `chat-${user.id}-${clientid.id}`
+      var temp = await prisma.temp.create({
+        data: {
+          id_user: clientid.id,
+          status: 'online'
+        }
+      })
     } else if (user.clientId) {
       let userEmail = socket.handshake.headers['user-email']
       const userid = await prisma.user.findUnique({
@@ -46,6 +52,12 @@ io.on('connection', async (socket) => {
           }
       })
       roomName = `chat-${userid.id}-${user.clientId}`
+      var temp = await prisma.temp.create({
+        data: {
+          id_user: userid.id,
+          status: 'online'
+        }
+      })
     } else {
       throw new Error('Invalid user data')
     }
@@ -54,6 +66,33 @@ io.on('connection', async (socket) => {
 
     socket.on(roomName, (data) => {
       socket.broadcast.emit(roomName, data)
+    })
+
+    socket.on('disconnect', async () => {
+      if (user.id) {
+
+        await prisma.temp.update({
+          where: {
+            id: temp.id
+          },
+          data: {
+            status: 'offline',
+            deletedAt: new Date()
+          },
+        })
+      } else if (user.clientId) {
+
+        await prisma.temp.update({
+          where: {
+            id: temp.id
+          },
+          data: {
+            status: 'offline',
+            deletedAt: new Date()
+          }
+        })
+      }
+      console.log(`User ${user.id || user.clientId} disconnected`)
     })
 
   } catch (error) {

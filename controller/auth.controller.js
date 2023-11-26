@@ -1,4 +1,5 @@
 const { ResponseTemplate } = require('../helper/template.helper')
+const { HashPassword, ComparePassword } = require('../helper/hash_pass_helper')
 const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
@@ -6,12 +7,15 @@ var jwt = require('jsonwebtoken')
 
 async function Create(req, res) {
 
-    const { name, phone_number, email, role } = req.body
+    const { name, phone_number, email, password, role } = req.body
+
+    const hashPass = await HashPassword(password)
 
     const payload = {
         name,
         phone_number,
         email,
+        password: hashPass,
         role
     }
 
@@ -60,7 +64,7 @@ async function Create(req, res) {
 async function Login(req, res) {
 
     try {
-        const { email } = req.body
+        const { email, password } = req.body
 
         const checkUser = await prisma.user.findUnique({
             where: {
@@ -70,6 +74,14 @@ async function Login(req, res) {
 
         if (checkUser === null) {
             let resp = ResponseTemplate(null, 'email is not found or incorrect', null, 400)
+            res.status(400).json(resp)
+            return
+        }
+
+        const checkPassword = await ComparePassword(password, checkUser.password)
+
+        if (!checkPassword) {
+            let resp = ResponseTemplate(null, 'password is not correct', null, 400)
             res.status(400).json(resp)
             return
         }
@@ -127,8 +139,43 @@ async function LoginClient(req, res) {
     }
 }
 
+async function userStatus(req, res) {
+
+    try {
+        
+        const users = await prisma.temp.findMany({
+            where: {
+                deletedAt: null
+            },
+            select: {
+                id_user: true,
+                status: true
+            },
+        });
+        const cekUser = (objectName) => {
+            return Object.keys(objectName).length === 0
+        }
+        
+        if (cekUser(users) === true) {
+            let resp = ResponseTemplate(null, 'tidak ada yang online', null, 404)
+            res.json(resp)
+            return
+        }
+
+        let resp = ResponseTemplate(users, 'success', null, 200)
+        res.json(resp)
+        return
+
+    } catch (error) {
+        let resp = ResponseTemplate(null, 'internal server error', error, 500)
+        res.json(resp)
+        return
+    }
+}
+
 module.exports = {
     Create,
     Login,
-    LoginClient
+    LoginClient,
+    userStatus
 }

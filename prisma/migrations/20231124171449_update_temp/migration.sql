@@ -1,0 +1,7 @@
+-- DropIndex
+DROP INDEX "temp_id_user_key";
+
+-- AlterTable
+ALTER TABLE "temp" ADD COLUMN     "createAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "deletedAt" TIMESTAMP(3),
+ADD COLUMN     "updateAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;

@@ -15,6 +15,7 @@ model user {
   name          String    @db.VarChar(255)
   phone_number  String    @db.VarChar(100)
   email         String    @db.VarChar(100) @unique
+  password      String    @db.VarChar(255)
   role          Role      @default(USER)
   createAt      DateTime  @default(now())
   updateAt      DateTime? @default(now())
@@ -24,4 +25,13 @@ model user {
 enum Role {
   USER
   ADMIN
+}
+
+model temp {
+  id            Int       @id @default(autoincrement())
+  id_user       Int       
+  status        String    @db.VarChar(100)
+  createAt      DateTime  @default(now())
+  updateAt      DateTime? @default(now())
+  deletedAt     DateTime?
 }
